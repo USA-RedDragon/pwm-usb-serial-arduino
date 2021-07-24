@@ -20,6 +20,27 @@ Configuration createDefaultConfiguration() {
   return configuration;
 }
 
+void writeBufferIntoEEPROM(int address, uint8_t *buffer, size_t bufSize)
+{
+  int addressIndex = address;
+  for (int i = 0; i < bufSize; i++) 
+  {
+    EEPROMwl.write(addressIndex, buffer[i] >> 8);
+    EEPROMwl.write(addressIndex + 1, buffer[i] & 0xFF);
+    addressIndex += 2;
+  }
+}
+
+void readBufferFromEEPROM(int address, uint8_t *buffer, size_t bufSize)
+{
+  int addressIndex = address;
+  for (int i = 0; i < bufSize; i++)
+  {
+    buffer[i] = (EEPROMwl.read(addressIndex) << 8) + EEPROMwl.read(addressIndex + 1);
+    addressIndex += 2;
+  }
+}
+
 Configuration eepromInit() {
     Configuration configuration;
     EEPROMwl.begin(EEPROM_LAYOUT_VERSION, AMOUNT_OF_INDEXES);
@@ -36,12 +57,17 @@ Configuration eepromInit() {
 
 void eepromWrite(Configuration configuration) {
     uint8_t buffer[Configuration_size];
-    pbToBuffer(Configuration_fields, &configuration, buffer, sizeof(buffer));
-    EEPROMwl.put(INDEX_CONFIGURATION, buffer);
+    size_t sizeWritten = pbToBuffer(Configuration_fields, &configuration, buffer, sizeof(buffer));
+    EEPROMwl.put(INDEX_CONFIGURATION_BUFFER_SIZE, sizeWritten);
+    writeBufferIntoEEPROM(INDEX_CONFIGURATION, buffer, sizeWritten);
 }
 
 Configuration eepromRead() {
     Configuration configuration;
-    EEPROMwl.get(INDEX_CONFIGURATION, configuration);
+    size_t bufferSize = Configuration_size;
+    EEPROMwl.get(INDEX_CONFIGURATION_BUFFER_SIZE, bufferSize);
+    uint8_t buffer[bufferSize];
+    readBufferFromEEPROM(INDEX_CONFIGURATION, buffer, bufferSize);
+    bufferToPb(buffer, bufferSize, Configuration_fields, &configuration);
     return configuration;
 }

@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#include <PacketSerial.h>
+
 #include <pb_encode.h>
 #include <pb_decode.h>
 
@@ -12,41 +14,17 @@
 #include "proto_utils.h"
 
 DeviceState currentState;
+PacketSerial serial;
 
 void reportState() {
   uint8_t buffer[DeviceState_size];
-  pbToBuffer(DeviceState_fields, &currentState, buffer, sizeof(buffer));
-  Serial.write(buffer, sizeof(buffer));
+  size_t bytesWritten = pbToBuffer(DeviceState_fields, &currentState, buffer, sizeof(buffer));
+  serial.send(buffer, bytesWritten);
 }
 
-void setup() {
-  Serial.begin(9600);
-  while(!Serial);
-
-  Configuration configuration = eepromInit();
-
-  currentState = {
-    true, .configuration = configuration,
-    true, .usb0 = configuration.usb0Restore,
-    true, .usb1 = configuration.usb1Restore
-  };
-
-  pwmSetup(currentState.configuration);
-
-  reportState();
-}
-
-void loop() {
-  if (Serial.available() > 0) {
-    uint8_t serialBuffer[DeviceState_size]; 
-    int bytesRead = 0;
-    while (Serial.peek() != '\r') {
-      serialBuffer[bytesRead++] = Serial.read();
-    }
-    Serial.read(); // Drop the '\r'
-
+void packetHandler(const uint8_t *buffer, size_t size) {
     DeviceState desiredState;
-    bufferToPb(serialBuffer, bytesRead, DeviceState_fields, &desiredState);
+    bufferToPb(buffer, size, DeviceState_fields, &desiredState);
 
     if (desiredState.has_configuration && 
       compareConfiguration(desiredState.configuration, currentState.configuration)) {
@@ -63,7 +41,27 @@ void loop() {
       comparePowerState(desiredState.usb1, currentState.usb1)) {
         currentState.usb1 = desiredState.usb1;
     }
-  }
+}
+
+void setup() {
+  serial.begin(9600);
+  serial.setPacketHandler(&packetHandler);
+
+  Configuration configuration = eepromInit();
+
+  currentState = {
+    true, .configuration = configuration,
+    true, .usb0 = configuration.usb0Restore,
+    true, .usb1 = configuration.usb1Restore
+  };
+
+  pwmSetup(currentState.configuration);
+
+  reportState();
+}
+
+void loop() {
+  serial.update();
 
   pwmWrite(PIN_PWM_USB0, currentState.usb0);
   pwmWrite(PIN_PWM_USB1, currentState.usb1);

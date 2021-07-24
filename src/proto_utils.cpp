@@ -3,9 +3,10 @@
 
 #include "proto_utils.h"
 
-void pbToBuffer(const pb_msgdesc_t *fields, void *pb_struct, uint8_t *buffer, size_t bufsize) {
+size_t pbToBuffer(const pb_msgdesc_t *fields, void *pb_struct, uint8_t *buffer, size_t bufsize) {
   pb_ostream_t stream = pb_ostream_from_buffer(buffer, bufsize);
   pb_encode(&stream, fields, pb_struct);
+  return stream.bytes_written;
 }
 
 void bufferToPb(uint8_t *buffer, size_t bufsize, const pb_msgdesc_t *fields, void *pb_struct) {
