@@ -14,19 +14,22 @@ void bufferToPb(uint8_t *buffer, size_t bufsize, const pb_msgdesc_t *fields, voi
   pb_decode(&stream, fields, pb_struct);
 }
 
+// true if different, false if same
 bool compareConfiguration(Configuration a, Configuration b) {
   if (a.has_usb0Restore && !b.has_usb0Restore)
-    return false;
+    return true;
   if (a.has_usb1Restore && !b.has_usb1Restore)
-    return false;
-  if (!comparePowerState(a.usb0Restore, b.usb0Restore))
-    return false;
+    return true;
+  if (comparePowerState(a.usb0Restore, b.usb0Restore))
+    return true;
   return comparePowerState(a.usb1Restore, b.usb1Restore);
 }
 
+// true if different, false if same
 bool comparePowerState(PowerState a, PowerState b) {
   if (a.dutyCycle != b.dutyCycle)
-    return false;
+    return true;
   if (a.power != b.power)
-    return false;
+    return true;
+  return false;
 }

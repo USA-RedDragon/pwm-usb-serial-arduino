@@ -22,9 +22,11 @@ void reportState() {
   serial.send(buffer, bytesWritten);
 }
 
-void packetHandler(const uint8_t *buffer, size_t size) {
+void packetHandler(const uint8_t* buffer, size_t size) {
     DeviceState desiredState;
-    bufferToPb(buffer, size, DeviceState_fields, &desiredState);
+    uint8_t tempBuffer[size];
+    memcpy(tempBuffer, buffer, size);
+    bufferToPb(tempBuffer, size, DeviceState_fields, &desiredState);
 
     if (desiredState.has_configuration && 
       compareConfiguration(desiredState.configuration, currentState.configuration)) {
@@ -61,12 +63,11 @@ void setup() {
 }
 
 void loop() {
-  serial.update();
-
   pwmWrite(PIN_PWM_USB0, currentState.usb0);
   pwmWrite(PIN_PWM_USB1, currentState.usb1);
 
   reportState();
 
   delay(100);
+  serial.update();
 }
