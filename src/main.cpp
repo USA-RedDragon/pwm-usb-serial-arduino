@@ -63,11 +63,9 @@ void setup() {
 }
 
 void loop() {
+  serial.update();
   pwmWrite(PIN_PWM_USB0, currentState.usb0);
   pwmWrite(PIN_PWM_USB1, currentState.usb1);
 
   reportState();
-
-  delay(100);
-  serial.update();
 }
