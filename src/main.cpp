@@ -68,5 +68,5 @@ void loop() {
 
   reportState();
 
-  delay(500);
+  delay(100);
 }
