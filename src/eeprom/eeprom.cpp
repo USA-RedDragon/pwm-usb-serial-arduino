@@ -24,7 +24,7 @@ Configuration eepromInit() {
     Configuration configuration;
     EEPROMwl.begin(EEPROM_LAYOUT_VERSION, AMOUNT_OF_INDEXES);
     bool eepromInited = false;
-    EEPROMwl.get(INDEX_EEPROM_INIT, eepromInited);
+    eepromInited = EEPROMwl.get(INDEX_EEPROM_INIT, eepromInited);
     if (!eepromInited) {
         configuration = createDefaultConfiguration();
         eepromWrite(configuration);
