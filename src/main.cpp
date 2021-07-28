@@ -46,9 +46,6 @@ void packetHandler(const uint8_t* buffer, size_t size) {
 }
 
 void setup() {
-  serial.begin(9600);
-  serial.setPacketHandler(&packetHandler);
-
   Configuration configuration = eepromInit();
 
   currentState = {
@@ -59,6 +56,8 @@ void setup() {
 
   pwmSetup(currentState.configuration);
 
+  serial.begin(9600);
+  serial.setPacketHandler(&packetHandler);
   reportState();
 }
 
