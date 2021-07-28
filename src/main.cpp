@@ -67,4 +67,5 @@ void loop() {
   pwmWrite(PIN_PWM_USB1, currentState.usb1);
 
   reportState();
+  delay(100);
 }
