@@ -43,6 +43,8 @@ void packetHandler(const uint8_t* buffer, size_t size) {
       comparePowerState(desiredState.usb1, currentState.usb1)) {
         currentState.usb1 = desiredState.usb1;
     }
+
+    reportState();
 }
 
 void setup() {
@@ -63,9 +65,10 @@ void setup() {
 
 void loop() {
   serial.update();
+
   pwmWrite(PIN_PWM_USB0, currentState.usb0);
   pwmWrite(PIN_PWM_USB1, currentState.usb1);
 
-  reportState();
-  delay(100);
+  // Call twice to send responses out
+  serial.update();
 }
